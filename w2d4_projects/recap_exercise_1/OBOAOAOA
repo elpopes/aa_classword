@@ -1,0 +1,772 @@
+[0m[1;32mHash < Object[m
+
+------------------------------------------------------------------------
+[1;32mIncludes:[m
+Enumerable (from ruby core)
+
+(from ruby core)
+------------------------------------------------------------------------
+A Hash maps each of its unique keys to a specific value.
+
+A Hash has certain similarities to an Array, but:
+* An Array index is always an Integer.
+* A Hash key can be (almost) any object.
+
+[32mHash Data Syntax[m
+
+The older syntax for Hash data uses the "hash rocket," [7m=>[m:
+
+  h = {:foo => 0, :bar => 1, :baz => 2}
+  h # => {:foo=>0, :bar=>1, :baz=>2}
+
+Alternatively, but only for a Hash key that's a Symbol, you can use a
+newer JSON-style syntax, where each bareword becomes a Symbol:
+
+  h = {foo: 0, bar: 1, baz: 2}
+  h # => {:foo=>0, :bar=>1, :baz=>2}
+
+You can also use a String in place of a bareword:
+
+  h = {'foo': 0, 'bar': 1, 'baz': 2}
+  h # => {:foo=>0, :bar=>1, :baz=>2}
+
+And you can mix the styles:
+
+  h = {foo: 0, :bar => 1, 'baz': 2}
+  h # => {:foo=>0, :bar=>1, :baz=>2}
+
+But it's an error to try the JSON-style syntax for a key that's not a
+bareword or a String:
+
+  # Raises SyntaxError (syntax error, unexpected ':', expecting =>):
+  h = {0: 'zero'}
+
+Hash value can be omitted, meaning that value will be fetched from the
+context by the name of the key:
+
+  x = 0
+  y = 100
+  h = {x:, y:}
+  h # => {:x=>0, :y=>100}
+
+[32mCommon Uses[m
+
+You can use a Hash to give names to objects:
+
+  person = {name: 'Matz', language: 'Ruby'}
+  person # => {:name=>"Matz", :language=>"Ruby"}
+
+You can use a Hash to give names to method arguments:
+
+  def some_method(hash)
+    p hash
+  end
+  some_method({foo: 0, bar: 1, baz: 2}) # => {:foo=>0, :bar=>1, :baz=>2}
+
+Note: when the last argument in a method call is a Hash, the curly
+braces may be omitted:
+
+  some_method(foo: 0, bar: 1, baz: 2) # => {:foo=>0, :bar=>1, :baz=>2}
+
+You can use a Hash to initialize an object:
+
+  class Dev
+    attr_accessor :name, :language
+    def initialize(hash)
+      self.name = hash[:name]
+      self.language = hash[:language]
+    end
+  end
+  matz = Dev.new(name: 'Matz', language: 'Ruby')
+  matz # => #<Dev: @name="Matz", @language="Ruby">
+
+[32mCreating a Hash[m
+
+You can create a Hash object explicitly with:
+
+* A {hash literal}[doc/syntax/literals_rdoc.html#label-Hash+Literals].
+
+You can convert certain objects to Hashes with:
+
+* Method {Hash}[Kernel.html#method-i-Hash].
+
+You can create a Hash by calling method Hash.new.
+
+Create an empty Hash:
+
+  h = Hash.new
+  h # => {}
+  h.class # => Hash
+
+You can create a Hash by calling method Hash.[].
+
+Create an empty Hash:
+
+  h = Hash[]
+  h # => {}
+
+Create a Hash with initial entries:
+
+  h = Hash[foo: 0, bar: 1, baz: 2]
+  h # => {:foo=>0, :bar=>1, :baz=>2}
+
+You can create a Hash by using its literal form (curly braces).
+
+Create an empty Hash:
+
+  h = {}
+  h # => {}
+
+Create a Hash with initial entries:
+
+  h = {foo: 0, bar: 1, baz: 2}
+  h # => {:foo=>0, :bar=>1, :baz=>2}
+
+[32mHash Value Basics[m
+
+The simplest way to retrieve a Hash value (instance method #[]):
+
+  h = {foo: 0, bar: 1, baz: 2}
+  h[:foo] # => 0
+
+The simplest way to create or update a Hash value (instance method
+#[]=):
+
+  h = {foo: 0, bar: 1, baz: 2}
+  h[:bat] = 3 # => 3
+  h # => {:foo=>0, :bar=>1, :baz=>2, :bat=>3}
+  h[:foo] = 4 # => 4
+  h # => {:foo=>4, :bar=>1, :baz=>2, :bat=>3}
+
+The simplest way to delete a Hash entry (instance method #delete):
+
+  h = {foo: 0, bar: 1, baz: 2}
+  h.delete(:bar) # => 1
+  h # => {:foo=>0, :baz=>2}
+
+[32mEntry Order[m
+
+A Hash object presents its entries in the order of their creation. This
+is seen in:
+
+* Iterative methods such as [7meach[m, [7meach_key[m,
+  [7meach_pair[m, [7meach_value[m.
+* Other order-sensitive methods such as [7mshift[m, [7mkeys[m,
+  [7mvalues[m.
+* The String returned by method [7minspect[m.
+
+A new Hash has its initial ordering per the given entries:
+
+  h = Hash[foo: 0, bar: 1]
+  h # => {:foo=>0, :bar=>1}
+
+New entries are added at the end:
+
+  h[:baz] = 2
+  h # => {:foo=>0, :bar=>1, :baz=>2}
+
+Updating a value does not affect the order:
+
+  h[:baz] = 3
+  h # => {:foo=>0, :bar=>1, :baz=>3}
+
+But re-creating a deleted entry can affect the order:
+
+  h.delete(:foo)
+  h[:foo] = 5
+  h # => {:bar=>1, :baz=>3, :foo=>5}
+
+[32mHash Keys[m
+
+Hash Key Equivalence
+
+Two objects are treated as the same hash key when their [7mhash[m
+value is identical and the two objects are [7meql?[m to each other.
+
+Modifying an Active Hash Key
+
+Modifying a Hash key while it is in use damages the hash's index.
+
+This Hash has keys that are Arrays:
+
+  a0 = [ :foo, :bar ]
+  a1 = [ :baz, :bat ]
+  h = {a0 => 0, a1 => 1}
+  h.include?(a0) # => true
+  h[a0] # => 0
+  a0.hash # => 110002110
+
+Modifying array element [7ma0[0][m changes its hash value:
+
+  a0[0] = :bam
+  a0.hash # => 1069447059
+
+And damages the Hash index:
+
+  h.include?(a0) # => false
+  h[a0] # => nil
+
+You can repair the hash index using method [7mrehash[m:
+
+  h.rehash # => {[:bam, :bar]=>0, [:baz, :bat]=>1}
+  h.include?(a0) # => true
+  h[a0] # => 0
+
+A String key is always safe. That's because an unfrozen String passed as
+a key will be replaced by a duplicated and frozen String:
+
+  s = 'foo'
+  s.frozen? # => false
+  h = {s => 0}
+  first_key = h.keys.first
+  first_key.frozen? # => true
+
+User-Defined Hash Keys
+
+To be useable as a Hash key, objects must implement the methods
+[7mhash[m and [7meql?[m. Note: this requirement does not apply if
+the Hash uses #compare_by_identity since comparison will then rely on
+the keys' object id instead of [7mhash[m and [7meql?[m.
+
+Object defines basic implementation for [7mhash[m and [7meq?[m that
+makes each object a distinct key. Typically, user-defined classes will
+want to override these methods to provide meaningful behavior, or for
+example inherit Struct that has useful definitions for these.
+
+A typical implementation of [7mhash[m is based on the object's data
+while [7meql?[m is usually aliased to the overridden [7m==[m method:
+
+  class Book
+    attr_reader :author, :title
+
+    def initialize(author, title)
+      @author = author
+      @title = title
+    end
+
+    def ==(other)
+      self.class === other &&
+        other.author == @author &&
+        other.title == @title
+    end
+
+    alias eql? ==
+
+    def hash
+      @author.hash ^ @title.hash # XOR
+    end
+  end
+
+  book1 = Book.new 'matz', 'Ruby in a Nutshell'
+  book2 = Book.new 'matz', 'Ruby in a Nutshell'
+
+  reviews = {}
+
+  reviews[book1] = 'Great reference!'
+  reviews[book2] = 'Nice and compact!'
+
+  reviews.length #=> 1
+
+[32mDefault Values[m
+
+The methods #[], #values_at and #dig need to return the value associated
+to a certain key. When that key is not found, that value will be
+determined by its default proc (if any) or else its default (initially
+`nil`).
+
+You can retrieve the default value with method #default:
+
+  h = Hash.new
+  h.default # => nil
+
+You can set the default value by passing an argument to method Hash.new
+or with method #default=
+
+  h = Hash.new(-1)
+  h.default # => -1
+  h.default = 0
+  h.default # => 0
+
+This default value is returned for #[], #values_at and #dig when a key
+is not found:
+
+  counts = {foo: 42}
+  counts.default # => nil (default)
+  counts[:foo] = 42
+  counts[:bar] # => nil
+  counts.default = 0
+  counts[:bar] # => 0
+  counts.values_at(:foo, :bar, :baz) # => [42, 0, 0]
+  counts.dig(:bar) # => 0
+
+Note that the default value is used without being duplicated. It is not
+advised to set the default value to a mutable object:
+
+  synonyms = Hash.new([])
+  synonyms[:hello] # => []
+  synonyms[:hello] << :hi # => [:hi], but this mutates the default!
+  synonyms.default # => [:hi]
+  synonyms[:world] << :universe
+  synonyms[:world] # => [:hi, :universe], oops
+  synonyms.keys # => [], oops
+
+To use a mutable object as default, it is recommended to use a default
+proc
+
+Default Proc
+
+When the default proc for a Hash is set (i.e., not [7mnil[m), the
+default value returned by method #[] is determined by the default proc
+alone.
+
+You can retrieve the default proc with method #default_proc:
+
+  h = Hash.new
+  h.default_proc # => nil
+
+You can set the default proc by calling Hash.new with a block or calling
+the method #default_proc=
+
+  h = Hash.new { |hash, key| "Default value for #{key}" }
+  h.default_proc.class # => Proc
+  h.default_proc = proc { |hash, key| "Default value for #{key.inspect}" }
+  h.default_proc.class # => Proc
+
+When the default proc is set (i.e., not [7mnil[m) and method #[] is
+called with with a non-existent key, #[] calls the default proc with
+both the Hash object itself and the missing key, then returns the proc's
+return value:
+
+  h = Hash.new { |hash, key| "Default value for #{key}" }
+  h[:nosuch] # => "Default value for nosuch"
+
+Note that in the example above no entry for key [7m:nosuch[m is
+created:
+
+  h.include?(:nosuch) # => false
+
+However, the proc itself can add a new entry:
+
+  synonyms = Hash.new { |hash, key| hash[key] = [] }
+  synonyms.include?(:hello) # => false
+  synonyms[:hello] << :hi # => [:hi]
+  synonyms[:world] << :universe # => [:universe]
+  synonyms.keys # => [:hello, :world]
+
+Note that setting the default proc will clear the default value and vice
+versa.
+
+[32mWhat's Here[m
+
+First, what's elsewhere. Class Hash:
+
+* Inherits from {class
+  Object}[Object.html#class-Object-label-What-27s+Here].
+* Includes {module
+  Enumerable}[Enumerable.html#module-Enumerable-label-What-27s+Here],
+  which provides dozens of additional methods.
+
+Here, class Hash provides methods that are useful for:
+
+* {Creating a Hash}[#class-Hash-label-Methods+for+Creating+a+Hash]
+* {Setting Hash State}[#class-Hash-label-Methods+for+Setting+Hash+State]
+* {Querying}[#class-Hash-label-Methods+for+Querying]
+* {Comparing}[#class-Hash-label-Methods+for+Comparing]
+* {Fetching}[#class-Hash-label-Methods+for+Fetching]
+* {Assigning}[#class-Hash-label-Methods+for+Assigning]
+* {Deleting}[#class-Hash-label-Methods+for+Deleting]
+* {Iterating}[#class-Hash-label-Methods+for+Iterating]
+* {Converting}[#class-Hash-label-Methods+for+Converting]
+* {Transforming Keys and
+  Values}[#class-Hash-label-Methods+for+Transforming+Keys+and+Values]
+* {And more....}[#class-Hash-label-Other+Methods]
+
+Class Hash also includes methods from module Enumerable.
+
+Methods for Creating a Hash
+
+::[]:
+  Returns a new hash populated with given objects.
+
+::new:
+  Returns a new empty hash.
+
+::try_convert:
+  Returns a new hash created from a given object.
+
+
+Methods for Setting Hash State
+
+#compare_by_identity:
+  Sets [7mself[m to consider only identity in comparing keys.
+
+#default=:
+  Sets the default to a given value.
+
+#default_proc=:
+  Sets the default proc to a given proc.
+
+#rehash:
+  Rebuilds the hash table by recomputing the hash index for each key.
+
+
+Methods for Querying
+
+#any?:
+  Returns whether any element satisfies a given criterion.
+
+#compare_by_identity?:
+  Returns whether the hash considers only identity when comparing keys.
+
+#default:
+  Returns the default value, or the default value for a given key.
+
+#default_proc:
+  Returns the default proc.
+
+#empty?:
+  Returns whether there are no entries.
+
+#eql?:
+  Returns whether a given object is equal to [7mself[m.
+
+#hash:
+  Returns the integer hash code.
+
+#has_value?:
+  Returns whether a given object is a value in [7mself[m.
+
+#include?, #has_key?, #member?, #key?:
+  Returns whether a given object is a key in [7mself[m.
+
+#length, #size:
+  Returns the count of entries.
+
+#value?:
+  Returns whether a given object is a value in [7mself[m.
+
+
+Methods for Comparing
+
+{#<}[#method-i-3C]:
+  Returns whether [7mself[m is a proper subset of a given object.
+
+{#<=}[#method-i-3C-3D]:
+  Returns whether [7mself[m is a subset of a given object.
+
+{#==}[#method-i-3D-3D]:
+  Returns whether a given object is equal to [7mself[m.
+
+{#>}[#method-i-3E]:
+  Returns whether [7mself[m is a proper superset of a given object
+
+{#>=}[#method-i-3E-3D]:
+  Returns whether [7mself[m is a proper superset of a given object.
+
+
+Methods for Fetching
+
+#[]:
+  Returns the value associated with a given key.
+
+#assoc:
+  Returns a 2-element array containing a given key and its value.
+
+#dig:
+  Returns the object in nested objects that is specified by a given key
+  and additional arguments.
+
+#fetch:
+  Returns the value for a given key.
+
+#fetch_values:
+  Returns array containing the values associated with given keys.
+
+#key:
+  Returns the key for the first-found entry with a given value.
+
+#keys:
+  Returns an array containing all keys in [7mself[m.
+
+#rassoc:
+  Returns a 2-element array consisting of the key and value of the
+  first-found entry having a given value.
+
+#values:
+  Returns an array containing all values in [7mself[m/
+
+#values_at:
+  Returns an array containing values for given keys.
+
+
+Methods for Assigning
+
+#[]=, #store:
+  Associates a given key with a given value.
+
+#merge:
+  Returns the hash formed by merging each given hash into a copy of
+  [7mself[m.
+
+#merge!, #update:
+  Merges each given hash into [7mself[m.
+
+#replace:
+  Replaces the entire contents of [7mself[m with the contents of a
+  givan hash.
+
+
+Methods for Deleting
+
+These methods remove entries from [7mself[m:
+
+#clear:
+  Removes all entries from [7mself[m.
+
+#compact!:
+  Removes all [7mnil[m-valued entries from [7mself[m.
+
+#delete:
+  Removes the entry for a given key.
+
+#delete_if:
+  Removes entries selected by a given block.
+
+#filter!, #select!:
+  Keep only those entries selected by a given block.
+
+#keep_if:
+  Keep only those entries selected by a given block.
+
+#reject!:
+  Removes entries selected by a given block.
+
+#shift:
+  Removes and returns the first entry.
+
+
+These methods return a copy of [7mself[m with some entries removed:
+
+#compact:
+  Returns a copy of [7mself[m with all [7mnil[m-valued entries
+  removed.
+
+#except:
+  Returns a copy of [7mself[m with entries removed for specified keys.
+
+#filter, #select:
+  Returns a copy of [7mself[m with only those entries selected by a
+  given block.
+
+#reject:
+  Returns a copy of [7mself[m with entries removed as specified by a
+  given block.
+
+#slice:
+  Returns a hash containing the entries for given keys.
+
+
+Methods for Iterating
+#each, #each_pair:
+  Calls a given block with each key-value pair.
+
+#each_key:
+  Calls a given block with each key.
+
+#each_value:
+  Calls a given block with each value.
+
+
+Methods for Converting
+
+#inspect, #to_s:
+  Returns a new String containing the hash entries.
+
+#to_a:
+  Returns a new array of 2-element arrays; each nested array contains a
+  key-value pair from [7mself[m.
+
+#to_h:
+  Returns [7mself[m if a Hash; if a subclass of Hash, returns a Hash
+  containing the entries from [7mself[m.
+
+#to_hash:
+  Returns [7mself[m.
+
+#to_proc:
+  Returns a proc that maps a given key to its value.
+
+
+Methods for Transforming Keys and Values
+
+#transform_keys:
+  Returns a copy of [7mself[m with modified keys.
+
+#transform_keys!:
+  Modifies keys in [7mself[m
+
+#transform_values:
+  Returns a copy of [7mself[m with modified values.
+
+#transform_values!:
+  Modifies values in [7mself[m.
+
+
+Other Methods
+#flatten:
+  Returns an array that is a 1-dimensional flattening of [7mself[m.
+
+#invert:
+  Returns a hash with the each key-value pair inverted.
+
+------------------------------------------------------------------------
+[1;32mClass methods:[m
+
+  []
+  new
+  ruby2_keywords_hash
+  ruby2_keywords_hash?
+  try_convert
+
+[1;32mInstance methods:[m
+
+  <
+  <=
+  ==
+  >
+  >=
+  []
+  []=
+  any?
+  assoc
+  clear
+  compact
+  compact!
+  compare_by_identity
+  compare_by_identity?
+  deconstruct_keys
+  default
+  default=
+  default_proc
+  default_proc=
+  delete
+  delete_if
+  dig
+  each
+  each_key
+  each_pair
+  each_value
+  empty?
+  eql?
+  except
+  fetch
+  fetch_values
+  filter
+  filter!
+  flatten
+  has_key?
+  has_value?
+  hash
+  include?
+  initialize_copy
+  inspect
+  invert
+  keep_if
+  key
+  key?
+  keys
+  length
+  member?
+  merge
+  merge!
+  rassoc
+  rehash
+  reject
+  reject!
+  replace
+  select
+  select!
+  shift
+  size
+  slice
+  store
+  to_a
+  to_h
+  to_hash
+  to_proc
+  to_s
+  transform_keys
+  transform_keys!
+  transform_values
+  transform_values!
+  update
+  value?
+  values
+  values_at
+
+(from gem activesupport-7.0.3)
+------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------
+[1;32mClass methods:[m
+
+  from_trusted_xml
+  from_xml
+
+[1;32mInstance methods:[m
+
+  _deep_transform_keys_in_object
+  _deep_transform_keys_in_object!
+  _deep_transform_values_in_object
+  _deep_transform_values_in_object!
+  assert_valid_keys
+  compact_blank!
+  deep_dup
+  deep_merge
+  deep_merge!
+  deep_stringify_keys
+  deep_stringify_keys!
+  deep_symbolize_keys
+  deep_symbolize_keys!
+  deep_transform_keys
+  deep_transform_keys!
+  deep_transform_values
+  deep_transform_values!
+  except
+  except!
+  extract!
+  extractable_options?
+  nested_under_indifferent_access
+  reverse_merge
+  reverse_merge!
+  reverse_update
+  slice!
+  stringify_keys
+  stringify_keys!
+  symbolize_keys
+  symbolize_keys!
+  to_options
+  to_options!
+  to_param
+  to_query
+  to_xml
+  with_defaults
+  with_defaults!
+  with_indifferent_access
+
+(from gem concurrent-ruby-1.1.10)
+------------------------------------------------------------------------
+@!macro concurrent_hash
+------------------------------------------------------------------------
